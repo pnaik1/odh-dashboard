@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Text, TextVariants, Timestamp } from '@patternfly/react-core';
 import { ActionsColumn, Td, Tr } from '@patternfly/react-table';
-import { ProjectKind } from '~/k8sTypes';
+import { ProjectKind, AccessReviewResourceAttributes } from '~/k8sTypes';
+import { useAccessReview } from '~/api';
 import useProjectNotebookStates from '~/pages/projects/notebook/useProjectNotebookStates';
 import ListNotebookState from '~/pages/projects/notebook/ListNotebookState';
 import ResourceNameTooltip from '~/components/ResourceNameTooltip';
@@ -14,7 +16,11 @@ type ProjectTableRowProps = {
   setEditData: (data: ProjectKind) => void;
   setDeleteData: (data: ProjectKind) => void;
 };
-
+const accessReviewResource: AccessReviewResourceAttributes = {
+  group: 'rbac.authorization.k8s.io',
+  resource: 'rolebindings',
+  verb: 'create',
+};
 const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
   obj: project,
   isRefreshing,
@@ -23,7 +29,11 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
 }) => {
   const [notebookStates, loaded, error] = useProjectNotebookStates(project.metadata.name);
   const owner = getProjectOwner(project);
-
+  const navigate = useNavigate();
+  const [allowCreate] = useAccessReview({
+    ...accessReviewResource,
+    namespace: project.metadata.name,
+  });
   return (
     <Tr>
       <Td dataLabel="Name">
@@ -58,23 +68,49 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
         )}
       </Td>
       <Td isActionCell>
-        <ActionsColumn
-          items={[
-            {
-              title: 'Edit project',
-              isDisabled: isRefreshing,
-              onClick: () => {
-                setEditData(project);
+        {allowCreate ? (
+          <ActionsColumn
+            items={[
+              {
+                title: 'Edit project',
+                isDisabled: isRefreshing,
+                onClick: () => {
+                  setEditData(project);
+                },
               },
-            },
-            {
-              title: 'Delete project',
-              onClick: () => {
-                setDeleteData(project);
+              {
+                title: 'Delete project',
+                onClick: () => {
+                  setDeleteData(project);
+                },
               },
-            },
-          ]}
-        />
+              {
+                title: 'Edit permission',
+                onClick: () => {
+                  navigate(`/projects/${project.metadata.name}`, { state: 'permission' });
+                },
+              },
+            ]}
+          />
+        ) : (
+          <ActionsColumn
+            items={[
+              {
+                title: 'Edit project',
+                isDisabled: isRefreshing,
+                onClick: () => {
+                  setEditData(project);
+                },
+              },
+              {
+                title: 'Delete project',
+                onClick: () => {
+                  setDeleteData(project);
+                },
+              },
+            ]}
+          />
+        )}
       </Td>
     </Tr>
   );

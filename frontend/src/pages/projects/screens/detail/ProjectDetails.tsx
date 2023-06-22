@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import { CubeIcon, UsersIcon } from '@patternfly/react-icons';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ApplicationsPage from '~/pages/ApplicationsPage';
 import { ProjectDetailsContext } from '~/pages/projects/ProjectDetailsContext';
 import { getProjectDescription, getProjectDisplayName } from '~/pages/projects/utils';
@@ -26,6 +26,7 @@ const ProjectDetails: React.FC = () => {
   const displayName = getProjectDisplayName(currentProject);
   const description = getProjectDescription(currentProject);
   const projectSharingEnabled = isProjectSharingEnabled(dashboardConfig);
+  const { state } = useLocation();
 
   const [allowCreate, rbacLoaded] = useAccessReview({
     ...accessReviewResource,
@@ -48,12 +49,20 @@ const ProjectDetails: React.FC = () => {
       empty={false}
     >
       {projectSharingEnabled && allowCreate ? (
-        <GenericHorizontalBar
-          sections={[
-            { title: 'Components', component: <ProjectDetailsComponents />, icon: <CubeIcon /> },
-            { title: 'Permissions', component: <ProjectSharing />, icon: <UsersIcon /> },
-          ]}
-        />
+        state == 'permission' ? (
+          <ProjectSharing />
+        ) : (
+          <GenericHorizontalBar
+            sections={[
+              {
+                title: 'Components',
+                component: <ProjectDetailsComponents />,
+                icon: <CubeIcon />,
+              },
+              { title: 'Permissions', component: <ProjectSharing />, icon: <UsersIcon /> },
+            ]}
+          />
+        )
       ) : (
         <ProjectDetailsComponents />
       )}
