@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { Alert, Button, Form, Modal, Stack, StackItem } from '@patternfly/react-core';
-import { EMPTY_AWS_SECRET_DATA } from '~/pages/projects/dataConnections/const';
+import {
+  EMPTY_AWS_PIPELINE_DATA,
+  PIPELINE_AWS_FIELDS,
+} from '~/pages/projects/dataConnections/const';
 import './ConfigurePipelinesServerModal.scss';
-import { convertAWSSecretData } from '~/pages/projects/screens/detail/data-connections/utils';
 import { usePipelinesAPI } from '~/concepts/pipelines/context';
-import { isAWSValid } from '~/pages/projects/screens/spawner/spawnerUtils';
 import { createPipelinesCR, deleteSecret } from '~/api';
 import useDataConnections from '~/pages/projects/screens/detail/data-connections/useDataConnections';
 import { PipelinesDatabaseSection } from './PipelinesDatabaseSection';
@@ -25,7 +26,7 @@ type ConfigurePipelinesServerModalProps = {
 
 const FORM_DEFAULTS: PipelineServerConfigType = {
   database: { useDefault: true, value: EMPTY_DATABASE_CONNECTION },
-  objectStorage: { useExisting: true, existingName: '', existingValue: EMPTY_AWS_SECRET_DATA },
+  objectStorage: { newValue: EMPTY_AWS_PIPELINE_DATA },
 };
 
 export const ConfigurePipelinesServerModal: React.FC<ConfigurePipelinesServerModalProps> = ({
@@ -55,9 +56,13 @@ export const ConfigurePipelinesServerModal: React.FC<ConfigurePipelinesServerMod
             : true,
         );
 
-    const objectStorageIsValid = config.objectStorage.useExisting
-      ? !!config.objectStorage.existingName
-      : isAWSValid(config.objectStorage.newValue);
+    const objectStorageIsValid = config.objectStorage.newValue.every(({ key, value }) =>
+      PIPELINE_AWS_FIELDS.filter((field) => field.isRequired)
+        .map((field) => field.key)
+        .includes(key)
+        ? !!value
+        : true,
+    );
 
     return databaseIsValid && objectStorageIsValid;
   };
@@ -71,24 +76,10 @@ export const ConfigurePipelinesServerModal: React.FC<ConfigurePipelinesServerMod
 
   const submit = () => {
     let objectStorage: PipelineServerConfigType['objectStorage'];
-    if (config.objectStorage.useExisting) {
-      const existingName = config.objectStorage.existingName;
-      const existingValue = dataConnections?.find((dc) => dc.data.metadata.name === existingName);
-      if (existingValue) {
-        objectStorage = {
-          existingValue: convertAWSSecretData(existingValue),
-          existingName,
-          useExisting: true,
-        };
-      } else {
-        throw new Error('Selected data connection does not exist');
-      }
-    } else {
-      objectStorage = {
-        newValue: config.objectStorage.newValue,
-        useExisting: false,
-      };
-    }
+    objectStorage = {
+      newValue: config.objectStorage.newValue,
+    };
+
     setFetching(true);
     setError(null);
 

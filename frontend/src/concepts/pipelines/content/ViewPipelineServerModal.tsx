@@ -22,6 +22,7 @@ import { AWS_KEYS } from '~/pages/projects/dataConnections/const';
 import useNamespaceSecret from '~/concepts/projects/apiHooks/useNamespaceSecret';
 import { EXTERNAL_DATABASE_SECRET } from '~/concepts/pipelines/content/configurePipelinesServer/const';
 import { DSPipelineKind } from '~/k8sTypes';
+import { getSecret } from '~/api';
 
 type ViewPipelineServerModalProps = {
   isOpen: boolean;
@@ -38,18 +39,15 @@ const ViewPipelineServerModal: React.FC<ViewPipelineServerModalProps> = ({
   const { data: dataConnections } = useContextResourceData<DataConnection>(
     useDataConnections(namespace),
   );
-  const [result] = useNamespaceSecret(namespace, EXTERNAL_DATABASE_SECRET.NAME);
-  const databaseSecret = dataEntryToRecord(result?.values?.data ?? []);
 
-  const objectStorageDataConnection = dataConnections.find(
-    (dc) =>
-      dc.data.metadata.name ===
-      pipelineNamespaceCR?.spec.objectStorage?.externalStorage?.s3CredentialsSecret?.secretName,
+  const [pipelineResult] = useNamespaceSecret(
+    namespace,
+    pipelineNamespaceCR?.spec.objectStorage.externalStorage?.s3CredentialsSecret.secretName ?? '',
   );
 
-  const objectStorageRecord: Partial<Record<AWS_KEYS, string>> = objectStorageDataConnection
-    ? dataEntryToRecord(convertAWSSecretData(objectStorageDataConnection))
-    : {};
+  const [result] = useNamespaceSecret(namespace, EXTERNAL_DATABASE_SECRET.NAME);
+  const databaseSecret = dataEntryToRecord(result?.values?.data ?? []);
+  const pipelineSecret = dataEntryToRecord(pipelineResult?.values?.data ?? []);
 
   return (
     <Modal
@@ -65,30 +63,29 @@ const ViewPipelineServerModal: React.FC<ViewPipelineServerModalProps> = ({
     >
       {pipelineNamespaceCR && (
         <DescriptionList termWidth="20ch" isHorizontal>
-          {!!objectStorageDataConnection &&
-            !!pipelineNamespaceCR?.spec.objectStorage?.externalStorage &&
-            !!objectStorageRecord && (
+          {!!pipelineNamespaceCR.spec.objectStorage &&
+            !!pipelineNamespaceCR.spec.objectStorage.externalStorage &&
+            !!pipelineNamespaceCR.spec.objectStorage.externalStorage.s3CredentialsSecret
+              .secretName && (
               <>
                 <Title headingLevel="h2">Object storage connection</Title>
                 <DescriptionListGroup>
                   {/* TODO: is this the pipeline name or the secret name? */}
                   <DescriptionListTerm>Name</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {getDataConnectionDisplayName(objectStorageDataConnection)}
+                    {/* {getDataConnectionDisplayName(objectStorageDataConnection)} */}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Access key</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {objectStorageRecord?.AWS_ACCESS_KEY_ID}
+                    {pipelineSecret?.AWS_ACCESS_KEY_ID || ''}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Secret key</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <PasswordHiddenText
-                      password={objectStorageRecord?.AWS_SECRET_ACCESS_KEY ?? ''}
-                    />
+                    <PasswordHiddenText password={pipelineSecret?.AWS_SECRET_ACCESS_KEY ?? ''} />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>

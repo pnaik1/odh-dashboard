@@ -8,7 +8,7 @@ import {
 import { AWSDataEntry, DataConnectionType } from '~/pages/projects/types';
 import { dataEntryToRecord } from '~/utilities/dataEntryToRecord';
 import { DATABASE_CONNECTION_KEYS, EXTERNAL_DATABASE_SECRET } from './const';
-import { ObjectStorageExisting, PipelineServerConfigType } from './types';
+import { PipelineServerConfigType } from './types';
 
 type SecretsResponse = [
   (
@@ -20,12 +20,8 @@ type SecretsResponse = [
   ),
   {
     secretName: string;
-    awsData: AWSDataEntry;
   },
 ];
-
-export const isUseExisting = (config: unknown): config is ObjectStorageExisting =>
-  (config as ObjectStorageExisting).existingName !== undefined;
 
 const createDatabaseSecret = (
   databaseConfig: PipelineServerConfigType['database'],
@@ -68,34 +64,17 @@ const createObjectStorageSecret = (
   dryRun: boolean,
 ): Promise<{
   secretName: string;
-  awsData: AWSDataEntry;
 }> => {
-  if (objectStorageConfig.useExisting) {
-    return Promise.resolve({
-      secretName: objectStorageConfig.existingName,
-      awsData: objectStorageConfig.existingValue,
-    });
-  }
   const assembledSecret = assembleSecret(
     projectName,
-    objectStorageConfig.newValue.reduce<Record<string, string>>(
-      (acc, { key, value }) => ({ ...acc, [key]: value }),
-      {},
-    ),
-    'aws',
+    objectStorageConfig.newValue.reduce((acc, { key, value }) => ({ ...acc, [key]: value }), {}),
+    'generic',
   );
 
   return createSecret(assembledSecret, { dryRun: dryRun }).then((secret) => {
-    if (isSecretAWSSecretKind(secret)) {
-      return {
-        secretName: assembledSecret.metadata.name,
-        awsData: convertAWSSecretData({
-          type: DataConnectionType.AWS,
-          data: secret,
-        }),
-      };
-    }
-    throw new Error('Error creating data connection');
+    return {
+      secretName: assembledSecret.metadata.name,
+    };
   });
 };
 
@@ -121,9 +100,8 @@ export const configureDSPipelineResourceSpec = (
   projectName: string,
 ): Promise<DSPipelineKind['spec']> =>
   createSecrets(config, projectName).then(([databaseSecret, objectStorageSecret]) => {
-    const awsRecord = dataEntryToRecord(objectStorageSecret.awsData);
+    const awsRecord = dataEntryToRecord(config.objectStorage.newValue);
     const databaseRecord = dataEntryToRecord(config.database.value);
-
     const [, externalStorageScheme, externalStorageHost] =
       awsRecord.AWS_S3_ENDPOINT?.match(/^(\w+):\/\/(.*)/) ?? [];
 

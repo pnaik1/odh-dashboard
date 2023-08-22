@@ -18,9 +18,11 @@ const NoPipelineServer: React.FC<NoPipelineServerProps> = ({ variant }) => (
   <EmptyState>
     <EmptyStateIcon icon={WrenchIcon} />
     <Title headingLevel="h2" size="lg">
-      No pipeline server
+      Enable pipelines
     </Title>
-    <EmptyStateBody>To import a pipeline, first create a pipeline server.</EmptyStateBody>
+    <EmptyStateBody>
+      To create and manage pipelines, first enable them by configuring a pipeline server
+    </EmptyStateBody>
     <Flex direction={{ default: 'column' }}>
       <FlexItem spacer={{ default: 'spacerLg' }} />
       <FlexItem>
