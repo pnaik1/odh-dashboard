@@ -40,9 +40,11 @@
     "cypress:open:record": "RECORD=1 npm run cypress:open",
     "cypress:run:record": "RECORD=1 npm run cypress:run && npm run cypress:format",
     "cypress:server:build": "ODH_DIST_DIR=./public-cypress POLL_INTERVAL=9999999 FAST_POLL_INTERVAL=9999999 WS_HOSTNAME=localhost:9002 npm run build",
+    "cypress:server:build:coverage": "ODH_DIST_DIR=./public-cypress POLL_INTERVAL=9999999 FAST_POLL_INTERVAL=9999999 WS_HOSTNAME=localhost:9002 npm run build && npx nyc instrument  --temp-dir ./.nyc.output  --in-place ./public-cypress ./public-cypress",
     "cypress:server": "serve ./public-cypress -p 9001 -s -L",
     "cypress:server:dev": "POLL_INTERVAL=9999999 FAST_POLL_INTERVAL=9999999 ODH_PORT=9001 WS_HOSTNAME=localhost:9002 npm run start:dev",
-    "cypress:format": "prettier --write src/__tests__/**/*.snap.json"
+    "cypress:format": "prettier --write src/__tests__/**/*.snap.json",
+    "cypress:test-coverage": "npx nyc report --include  '**/[A-Z]*.tsx' --reporter text  -t ./src/__tests__/cypress/.nyc_output"
   },
   "dependencies": {
     "@openshift/dynamic-plugin-sdk": "^4.0.0",
@@ -110,6 +112,8 @@
     "css-loader": "^5.2.7",
     "css-minimizer-webpack-plugin": "^4.2.2",
     "cypress": "^13.6.0",
+    "@cypress/code-coverage": "^3.12.33",
+    "nyc": "^15.1.0",
     "cypress-axe": "^1.5.0",
     "dotenv": "^8.2.0",
     "dotenv-expand": "^5.1.0",

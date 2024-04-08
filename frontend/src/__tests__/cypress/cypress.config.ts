@@ -34,6 +34,8 @@ export default defineConfig({
       : `cypress/e2e/**/*.(s)?cy.ts`,
     experimentalInteractiveRunEvents: true,
     setupNodeEvents(on, config) {
+      // eslint-disable-next-line import/no-extraneous-dependencies, @typescript-eslint/no-var-requires
+      require('@cypress/code-coverage/task')(on, config);
       setupWebsockets(on, config);
       on('task', {
         readJSON(filePath: string) {
@@ -75,6 +77,7 @@ export default defineConfig({
           }
         });
       }
+      return config;
     },
   },
 });

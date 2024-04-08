@@ -16,6 +16,8 @@
 import './commands';
 import chaiSubset from 'chai-subset';
 import { addCommands as webSocketsAddCommands } from './websockets';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import '@cypress/code-coverage/support';
 
 chai.use(chaiSubset);
 
