@@ -44,7 +44,7 @@ export const ModelRegistrySelectorContextProvider =
     }, []);
 
     if (!isLoaded) {
-      return <Bullseye>Loading model registries...</Bullseye>;
+      return <Bullseye>Loading all model registries...</Bullseye>;
     }
 
     if (error) {
