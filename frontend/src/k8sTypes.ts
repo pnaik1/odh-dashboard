@@ -1228,7 +1228,7 @@ export type OperatorStatus = {
 
 export type DashboardConfigKind = K8sResourceCommon & {
   spec: {
-    dashboardConfig: DashboardCommonConfig;
+    dashboardConfig?: DashboardCommonConfig;
     groupsConfig?: {
       adminGroups: string;
       allowedGroups: string;
