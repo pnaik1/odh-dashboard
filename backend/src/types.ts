@@ -13,7 +13,7 @@ export type OperatorStatus = {
 
 export type DashboardConfig = K8sResourceCommon & {
   spec: {
-    dashboardConfig: {
+    dashboardConfig?: {
       enablement: boolean;
       disableInfo: boolean;
       disableSupport: boolean;
