@@ -36,6 +36,7 @@ import { extractS3UriComponents } from '~/concepts/pipelines/content/artifacts/u
 import MarkdownView from '~/components/MarkdownView';
 import { useIsAreaAvailable, SupportedArea } from '~/concepts/areas';
 import { bytesAsRoundedGiB } from '~/utilities/number';
+import { useArtifactStorage } from '~/concepts/pipelines/apiHooks/useArtifactStorage';
 import { getArtifactProperties } from './utils';
 
 interface ArtifactVisualizationProps {
@@ -48,7 +49,7 @@ export const ArtifactVisualization: React.FC<ArtifactVisualizationProps> = ({ ar
   const [loading, setLoading] = React.useState<boolean>(false);
   const { namespace } = usePipelinesAPI();
   const isS3EndpointAvailable = useIsAreaAvailable(SupportedArea.S3_ENDPOINT).status;
-
+  console.log(useArtifactStorage(artifact));
   const artifactType = artifact.getType();
 
   React.useEffect(() => {
