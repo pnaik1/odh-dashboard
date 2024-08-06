@@ -3,6 +3,7 @@ import { mockDataSciencePipelineApplicationK8sResource } from '~/__mocks__/mockD
 import { mockDscStatus } from '~/__mocks__/mockDscStatus';
 import { mockK8sResourceList } from '~/__mocks__/mockK8sResourceList';
 import {
+  buildMetricPipelineVersionV2,
   buildMockPipelineVersionV2,
   buildMockPipelineVersionsV2,
 } from '~/__mocks__/mockPipelineVersionsProxy';
@@ -17,9 +18,9 @@ import {
   pipelineRunDetails,
   pipelineVersionImportModal,
 } from '~/__tests__/cypress/cypress/pages/pipelines';
-import { buildMockRunKF } from '~/__mocks__/mockRunKF';
+import { buildMetricRunKF, buildMockRunKF } from '~/__mocks__/mockRunKF';
 import { mockPipelinePodK8sResource } from '~/__mocks__/mockPipelinePodK8sResource';
-import { buildMockPipelineV2 } from '~/__mocks__';
+import { buildMockPipelineV2, mockDashboardConfig } from '~/__mocks__';
 import { verifyRelativeURL } from '~/__tests__/cypress/cypress/utils/url';
 import {
   DataSciencePipelineApplicationModel,
@@ -30,6 +31,7 @@ import {
 } from '~/__tests__/cypress/cypress/utils/models';
 import { deleteModal } from '~/__tests__/cypress/cypress/pages/components/DeleteModal';
 import { RecurringRunStatus } from '~/concepts/pipelines/kfTypes';
+import { initMlmdIntercepts } from './mlmdUtils';
 
 const projectId = 'test-project';
 const mockPipeline = buildMockPipelineV2({
@@ -41,10 +43,24 @@ const mockVersion = buildMockPipelineVersionV2({
   pipeline_version_id: 'test-version-id',
   display_name: 'test-version-name',
 });
+
+const mockMetricVersion = buildMetricPipelineVersionV2({
+  pipeline_id: mockPipeline.pipeline_id,
+  pipeline_version_id: 'test-version-id-2',
+  display_name: 'test-version-2',
+});
 const mockVersion2 = buildMockPipelineVersionV2({
   pipeline_id: mockPipeline.pipeline_id,
   pipeline_version_id: 'test-version-id-2',
   display_name: 'test-version-2',
+});
+const mockMetricRun = buildMetricRunKF({
+  display_name: 'test-pipeline-run',
+  run_id: 'test-pipeline-run-id',
+  pipeline_version_reference: {
+    pipeline_id: mockPipeline.pipeline_id,
+    pipeline_version_id: mockVersion.pipeline_version_id,
+  },
 });
 const mockRun = buildMockRunKF({
   display_name: 'test-pipeline-run',
@@ -63,7 +79,11 @@ const mockRecurringRun = buildMockRecurringRunKF({
   },
 });
 
-const initIntercepts = () => {
+const initIntercepts = (noMetrics = true) => {
+  cy.interceptOdh(
+    'GET /api/config',
+    mockDashboardConfig({ disablePipelineExperiments: false, disableS3Endpoint: false }),
+  );
   cy.interceptOdh(
     'GET /api/dsc/status',
     mockDscStatus({
@@ -118,6 +138,7 @@ const initIntercepts = () => {
     { path: { namespace: projectId, serviceName: 'dspa', pipelineId: mockPipeline.pipeline_id } },
     buildMockPipelineVersionsV2([mockVersion, mockVersion2]),
   );
+
   cy.interceptOdh(
     'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/recurringruns/:recurringRunId',
     {
@@ -129,12 +150,13 @@ const initIntercepts = () => {
     },
     mockRecurringRun,
   );
+
   cy.interceptOdh(
     'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/runs/:runId',
     {
       path: { namespace: projectId, serviceName: 'dspa', runId: mockRun.run_id },
     },
-    mockRun,
+    noMetrics ? mockRun : mockMetricRun,
   );
   cy.interceptOdh(
     'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/pipelines/:pipelineId/versions/:pipelineVersionId',
@@ -146,7 +168,7 @@ const initIntercepts = () => {
         pipelineVersionId: mockVersion.pipeline_version_id,
       },
     },
-    mockVersion,
+    noMetrics ? mockVersion : mockMetricVersion,
   );
   cy.interceptK8s(
     PodModel,
@@ -309,6 +331,51 @@ describe('Pipeline topology', () => {
       pipelineDetails.findYamlTab().click();
       const pipelineDashboardCodeEditor = pipelineDetails.getPipelineDashboardCodeEditor();
       pipelineDashboardCodeEditor.findInput().should('not.be.empty');
+    });
+  });
+
+  describe('Pipeline run visualization tab', () => {
+    beforeEach(() => {
+      initIntercepts(false);
+      cy.interceptOdh(
+        'GET /api/storage/:namespace/size',
+        {
+          query: {
+            key: 'metrics-visualization-pipeline/16dbff18-a3d5-4684-90ac-4e6198a9da0f/markdown-visualization/html_artifact',
+          },
+          path: { namespace: projectId },
+        },
+        {
+          body: 61,
+        },
+      );
+      cy.interceptOdh(
+        'GET /api/storage/:namespace',
+        {
+          query: {
+            key: 'metrics-visualization-pipeline/16dbff18-a3d5-4684-90ac-4e6198a9da0f/markdown-visualization/html_artifact',
+          },
+          path: { namespace: projectId },
+        },
+        '<html>helloWorld</html>',
+      );
+      initMlmdIntercepts(projectId);
+    });
+
+    it('check for visualization', () => {
+      initMlmdIntercepts(projectId);
+      pipelineRunDetails.visit(
+        projectId,
+        mockVersion.pipeline_id,
+        mockVersion.pipeline_version_id,
+        mockRun.run_id,
+      );
+      pipelineRunDetails.findArtifactNode('html-visualization.html_artifact').click();
+      const artifactDrawer = pipelineRunDetails.findArtifactRightDrawer();
+      artifactDrawer.findArtifactTitle().should('have.text', 'html_artifact');
+      artifactDrawer.findArtifactType().should('have.text', 'system.HTML');
+      artifactDrawer.findVisualizationTab().click();
+      artifactDrawer.findArtifactMarkdown().contains('helloWorld');
     });
   });
 
@@ -593,6 +660,7 @@ describe('Pipeline topology', () => {
   describe('Pipeline run Details', () => {
     beforeEach(() => {
       initIntercepts();
+      initMlmdIntercepts(projectId);
       pipelineRunDetails.visit(
         projectId,
         mockVersion.pipeline_id,

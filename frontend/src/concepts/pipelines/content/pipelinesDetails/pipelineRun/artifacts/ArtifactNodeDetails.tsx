@@ -66,7 +66,9 @@ export const ArtifactNodeDetails: React.FC<ArtifactNodeDetailsProps> = ({
               </DescriptionListDescription>
 
               <DescriptionListTerm>Artifact type</DescriptionListTerm>
-              <DescriptionListDescription>{artifact.getType()}</DescriptionListDescription>
+              <DescriptionListDescription data-testid="artifact-type">
+                {artifact.getType()}
+              </DescriptionListDescription>
 
               <DescriptionListTerm>Created at</DescriptionListTerm>
               <DescriptionListDescription>

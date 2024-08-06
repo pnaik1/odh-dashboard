@@ -334,6 +334,7 @@ export type PipelineSpec = {
   root: {
     dag: DAG;
     inputDefinitions?: InputOutputDefinition;
+    outputDefinitions?: InputOutputDefinition;
   };
   schemaVersion: string;
   sdkVersion: string;

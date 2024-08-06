@@ -53,6 +53,12 @@ class PipelinesTopology {
   findTaskNode(name: string) {
     return cy.get(`[data-id="${name}"][data-kind="node"][data-type="DEFAULT_TASK_NODE"]`);
   }
+
+  findArtifactNode(name: string) {
+    return cy.get(
+      `[data-id="GROUP.root.ARTIFACT.${name}"][data-kind="node"][data-type="ICON_TASK_NODE"]`,
+    );
+  }
 }
 
 class PipelineRunRightDrawer extends Contextual<HTMLDivElement> {
@@ -81,6 +87,24 @@ class PipelineRunRightDrawer extends Contextual<HTMLDivElement> {
   }
 }
 
+class ArtifactRightDrawer extends Contextual<HTMLDivElement> {
+  findArtifactTitle() {
+    return cy.findByTestId('artifact-task-name');
+  }
+
+  findArtifactType() {
+    return cy.findByTestId('artifact-type');
+  }
+
+  findVisualizationTab() {
+    return cy.findByRole('tab', { name: 'Visualization' });
+  }
+
+  findArtifactMarkdown() {
+    return cy.findByTestId('artifact-markdown');
+  }
+}
+
 class RunDetails extends PipelinesTopology {
   findGraphTab() {
     return cy.findByTestId('pipeline-run-tab-graph');
@@ -100,6 +124,12 @@ class RunDetails extends PipelinesTopology {
 
   findRightDrawer() {
     return new PipelineRunRightDrawer(() =>
+      cy.findByTestId('pipeline-run-drawer-right-content').parent(),
+    );
+  }
+
+  findArtifactRightDrawer() {
+    return new ArtifactRightDrawer(() =>
       cy.findByTestId('pipeline-run-drawer-right-content').parent(),
     );
   }

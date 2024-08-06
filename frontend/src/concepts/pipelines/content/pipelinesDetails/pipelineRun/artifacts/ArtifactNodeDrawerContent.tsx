@@ -40,7 +40,7 @@ export const ArtifactNodeDrawerContent: React.FC<ArtifactNodeDrawerContentProps>
   return task ? (
     <>
       <DrawerHead>
-        <Title headingLevel="h2" size="xl">
+        <Title headingLevel="h2" size="xl" data-testid="artifact-task-name">
           {task.name}
         </Title>
         {task.status?.podName && <Text component="small">{task.status.podName}</Text>}

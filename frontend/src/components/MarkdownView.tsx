@@ -22,6 +22,7 @@ const MarkdownView: React.FC<MarkdownViewProps & React.HTMLAttributes<HTMLDivEle
   const Component = component;
   return (
     <Component
+      data-testid="artifact-markdown"
       className={classNames('odh-markdown-view', className, {
         'odh-markdown-view--with-padding': !conciseDisplay,
       })}

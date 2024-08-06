@@ -178,6 +178,10 @@ class CompareRunsArtifactSelect extends Contextual<HTMLElement> {
   findArtifactContent(index = 0) {
     return this.find().findByTestId(`pipeline-run-artifact-content-${index}`);
   }
+
+  findMarkdown(index = 0) {
+    return this.findArtifactContent(index).findByTestId('artifact-markdown');
+  }
 }
 
 class ConfusionMatrixArtifactSelect extends CompareRunsArtifactSelect {

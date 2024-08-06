@@ -448,6 +448,278 @@ export const buildMockPipelineVersion = (
   description: 'test',
   ...pipelineVersion,
 });
+/* eslint-disable @typescript-eslint/naming-convention */
+export const buildMetricPipelineVersionV2 = (
+  pipelineVersion?: Partial<PipelineVersionKFv2>,
+): PipelineVersionKFv2 => {
+  const display_name = pipelineVersion?.display_name || 'Test pipeline version';
+  const pipeline_version_id = display_name.replace(/ /g, '-').toLowerCase();
+  return {
+    pipeline_id: '8ce2d041-3eb9-41a0-828c-45209fdf1c20',
+    pipeline_version_id,
+    display_name,
+    created_at: '2023-12-07T16:08:01Z',
+    description: 'test',
+
+    pipeline_spec: {
+      components: {
+        'comp-digit-classification': {
+          executorLabel: 'exec-digit-classification',
+          outputDefinitions: {
+            artifacts: {
+              metrics: {
+                artifactType: {
+                  schemaTitle: ArtifactType.METRICS,
+                  schemaVersion: '0.0.1',
+                },
+              },
+            },
+          },
+        },
+        'comp-html-visualization': {
+          executorLabel: 'exec-html-visualization',
+          outputDefinitions: {
+            artifacts: {
+              html_artifact: {
+                artifactType: {
+                  schemaTitle: ArtifactType.HTML,
+                  schemaVersion: '0.0.1',
+                },
+              },
+            },
+          },
+        },
+        'comp-iris-sgdclassifier': {
+          executorLabel: 'exec-iris-sgdclassifier',
+          inputDefinitions: {
+            parameters: {
+              test_samples_fraction: {
+                parameterType: InputDefinitionParameterType.DOUBLE,
+              },
+            },
+          },
+          outputDefinitions: {
+            artifacts: {
+              metrics: {
+                artifactType: {
+                  schemaTitle: ArtifactType.CLASSIFICATION_METRICS,
+                  schemaVersion: '0.0.1',
+                },
+              },
+            },
+          },
+        },
+        'comp-markdown-visualization': {
+          executorLabel: 'exec-markdown-visualization',
+          outputDefinitions: {
+            artifacts: {
+              markdown_artifact: {
+                artifactType: {
+                  schemaTitle: ArtifactType.MARKDOWN,
+                  schemaVersion: '0.0.1',
+                },
+              },
+            },
+          },
+        },
+        'comp-wine-classification': {
+          executorLabel: 'exec-wine-classification',
+          outputDefinitions: {
+            artifacts: {
+              metrics: {
+                artifactType: {
+                  schemaTitle: ArtifactType.CLASSIFICATION_METRICS,
+                  schemaVersion: '0.0.1',
+                },
+              },
+            },
+          },
+        },
+      },
+      deploymentSpec: {
+        executors: {
+          'exec-digit-classification': {
+            container: {
+              args: ['--executor_input', '{{$}}', '--function_to_execute', 'digit_classification'],
+              command: [
+                'sh',
+                '-c',
+                '\nif ! [ -x "$(command -v pip)" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location \'kfp==2.7.0\' \'--no-deps\' \'typing-extensions\u003e=3.7.4,\u003c5; python_version\u003c"3.9"\'  \u0026\u0026  python3 -m pip install --quiet --no-warn-script-location \'scikit-learn\' \u0026\u0026 "$0" "$@"\n',
+                'sh',
+                '-ec',
+                'program_path=$(mktemp -d)\n\nprintf "%s" "$0" \u003e "$program_path/ephemeral_component.py"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"\n',
+                "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef digit_classification(metrics: Output[Metrics]):\n    from sklearn import model_selection\n    from sklearn.linear_model import LogisticRegression\n    from sklearn import datasets\n    from sklearn.metrics import accuracy_score\n\n    # Load digits dataset\n    iris = datasets.load_iris()\n\n    # # Create feature matrix\n    X = iris.data\n\n    # Create target vector\n    y = iris.target\n\n    #test size\n    test_size = 0.33\n\n    seed = 7\n    #cross-validation settings\n    kfold = model_selection.KFold(n_splits=10, random_state=seed, shuffle=True)\n\n    #Model instance\n    model = LogisticRegression()\n    scoring = 'accuracy'\n    results = model_selection.cross_val_score(model, X, y, cv=kfold, scoring=scoring)\n\n    #split data\n    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_size, random_state=seed)\n    #fit model\n    model.fit(X_train, y_train)\n\n    #accuracy on test set\n    result = model.score(X_test, y_test)\n    metrics.log_metric('accuracy', (result*100.0))\n\n",
+              ],
+              image: 'ubi8/python-39:latest',
+            },
+          },
+          'exec-html-visualization': {
+            container: {
+              args: ['--executor_input', '{{$}}', '--function_to_execute', 'html_visualization'],
+              command: [
+                'sh',
+                '-c',
+                '\nif ! [ -x "$(command -v pip)" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location \'kfp==2.7.0\' \'--no-deps\' \'typing-extensions\u003e=3.7.4,\u003c5; python_version\u003c"3.9"\' \u0026\u0026 "$0" "$@"\n',
+                'sh',
+                '-ec',
+                'program_path=$(mktemp -d)\n\nprintf "%s" "$0" \u003e "$program_path/ephemeral_component.py"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"\n',
+                "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef html_visualization(html_artifact: Output[HTML]):\n    html_content = '\u003c!DOCTYPE html\u003e\u003chtml\u003e\u003cbody\u003e\u003ch1\u003eHello world\u003c/h1\u003e\u003c/body\u003e\u003c/html\u003e'\n    with open(html_artifact.path, 'w') as f:\n        f.write(html_content)\n\n",
+              ],
+              image: 'python:3.7',
+            },
+          },
+          'exec-iris-sgdclassifier': {
+            container: {
+              args: ['--executor_input', '{{$}}', '--function_to_execute', 'iris_sgdclassifier'],
+              command: [
+                'sh',
+                '-c',
+                '\nif ! [ -x "$(command -v pip)" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location \'kfp==2.7.0\' \'--no-deps\' \'typing-extensions\u003e=3.7.4,\u003c5; python_version\u003c"3.9"\'  \u0026\u0026  python3 -m pip install --quiet --no-warn-script-location \'scikit-learn\' \u0026\u0026 "$0" "$@"\n',
+                'sh',
+                '-ec',
+                'program_path=$(mktemp -d)\n\nprintf "%s" "$0" \u003e "$program_path/ephemeral_component.py"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"\n',
+                "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef iris_sgdclassifier(test_samples_fraction: float, metrics: Output[ClassificationMetrics]):\n    from sklearn import datasets, model_selection\n    from sklearn.linear_model import SGDClassifier\n    from sklearn.metrics import confusion_matrix\n\n    iris_dataset = datasets.load_iris()\n    train_x, test_x, train_y, test_y = model_selection.train_test_split(\n        iris_dataset['data'], iris_dataset['target'], test_size=test_samples_fraction)\n\n\n    classifier = SGDClassifier()\n    classifier.fit(train_x, train_y)\n    predictions = model_selection.cross_val_predict(classifier, train_x, train_y, cv=3)\n    metrics.log_confusion_matrix(\n        ['Setosa', 'Versicolour', 'Virginica'],\n        confusion_matrix(train_y, predictions).tolist() # .tolist() to convert np array to list.\n    )\n\n",
+              ],
+              image: 'ubi8/python-39:latest',
+            },
+          },
+          'exec-markdown-visualization': {
+            container: {
+              args: [
+                '--executor_input',
+                '{{$}}',
+                '--function_to_execute',
+                'markdown_visualization',
+              ],
+              command: [
+                'sh',
+                '-c',
+                '\nif ! [ -x "$(command -v pip)" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location \'kfp==2.7.0\' \'--no-deps\' \'typing-extensions\u003e=3.7.4,\u003c5; python_version\u003c"3.9"\' \u0026\u0026 "$0" "$@"\n',
+                'sh',
+                '-ec',
+                'program_path=$(mktemp -d)\n\nprintf "%s" "$0" \u003e "$program_path/ephemeral_component.py"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"\n',
+                "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef markdown_visualization(markdown_artifact: Output[Markdown]):\n    markdown_content = '## Hello world \\n\\n Markdown content'\n    with open(markdown_artifact.path, 'w') as f:\n        f.write(markdown_content)\n\n",
+              ],
+              image: 'python:3.7',
+            },
+          },
+          'exec-wine-classification': {
+            container: {
+              args: ['--executor_input', '{{$}}', '--function_to_execute', 'wine_classification'],
+              command: [
+                'sh',
+                '-c',
+                '\nif ! [ -x "$(command -v pip)" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location \'kfp==2.7.0\' \'--no-deps\' \'typing-extensions\u003e=3.7.4,\u003c5; python_version\u003c"3.9"\'  \u0026\u0026  python3 -m pip install --quiet --no-warn-script-location \'scikit-learn\' \u0026\u0026 "$0" "$@"\n',
+                'sh',
+                '-ec',
+                'program_path=$(mktemp -d)\n\nprintf "%s" "$0" \u003e "$program_path/ephemeral_component.py"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"\n',
+                "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef wine_classification(metrics: Output[ClassificationMetrics]):\n    from sklearn.ensemble import RandomForestClassifier\n    from sklearn.metrics import roc_curve\n    from sklearn.datasets import load_wine\n    from sklearn.model_selection import train_test_split, cross_val_predict\n\n    X, y = load_wine(return_X_y=True)\n    # Binary classification problem for label 1.\n    y = y == 1\n\n    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)\n    rfc = RandomForestClassifier(n_estimators=10, random_state=42)\n    rfc.fit(X_train, y_train)\n    y_scores = cross_val_predict(rfc, X_train, y_train, cv=3, method='predict_proba')\n    y_predict = cross_val_predict(rfc, X_train, y_train, cv=3, method='predict')\n    fpr, tpr, thresholds = roc_curve(y_true=y_train, y_score=y_scores[:,1], pos_label=True)\n    thresholds[0] = 2\n    metrics.log_roc_curve(fpr, tpr, thresholds)\n\n",
+              ],
+              image: 'ubi8/python-39:latest',
+            },
+          },
+        },
+      },
+      pipelineInfo: {
+        name: 'metrics-visualization-pipeline',
+      },
+      root: {
+        dag: {
+          tasks: {
+            'digit-classification': {
+              cachingOptions: {
+                enableCache: true,
+              },
+              componentRef: {
+                name: 'comp-digit-classification',
+              },
+              taskInfo: {
+                name: 'digit-classification',
+              },
+            },
+            'html-visualization': {
+              cachingOptions: {
+                enableCache: true,
+              },
+              componentRef: {
+                name: 'comp-html-visualization',
+              },
+              taskInfo: {
+                name: 'html-visualization',
+              },
+            },
+            'iris-sgdclassifier': {
+              cachingOptions: {
+                enableCache: true,
+              },
+              componentRef: {
+                name: 'comp-iris-sgdclassifier',
+              },
+              inputs: {
+                parameters: {
+                  test_samples_fraction: {
+                    runtimeValue: {
+                      constant: '0.3',
+                    },
+                  },
+                },
+              },
+              taskInfo: {
+                name: 'iris-sgdclassifier',
+              },
+            },
+            'markdown-visualization': {
+              cachingOptions: {
+                enableCache: true,
+              },
+              componentRef: {
+                name: 'comp-markdown-visualization',
+              },
+              taskInfo: {
+                name: 'markdown-visualization',
+              },
+            },
+            'wine-classification': {
+              cachingOptions: {
+                enableCache: true,
+              },
+              componentRef: {
+                name: 'comp-wine-classification',
+              },
+              taskInfo: {
+                name: 'wine-classification',
+              },
+            },
+          },
+        },
+        outputDefinitions: {
+          artifacts: {
+            'digit-classification-metrics': {
+              artifactType: {
+                schemaTitle: ArtifactType.METRICS,
+                schemaVersion: '0.0.1',
+              },
+            },
+            'iris-sgdclassifier-metrics': {
+              artifactType: {
+                schemaTitle: ArtifactType.CLASSIFICATION_METRICS,
+                schemaVersion: '0.0.1',
+              },
+            },
+            'wine-classification-metrics': {
+              artifactType: {
+                schemaTitle: ArtifactType.CLASSIFICATION_METRICS,
+                schemaVersion: '0.0.1',
+              },
+            },
+          },
+        },
+      },
+      schemaVersion: '2.1.0',
+      sdkVersion: 'kfp-2.7.0',
+    },
+  };
+};
 
 export const buildMockPipelineVersionV2 = (
   pipelineVersion?: Partial<PipelineVersionKFv2>,
@@ -505,7 +777,7 @@ export const buildMockPipelineVersionV2 = (
               artifacts: {
                 iris_dataset: {
                   artifactType: {
-                    schemaTitle: ArtifactType.DATASET,
+                    schemaTitle: ArtifactType.HTML,
                     schemaVersion: '0.0.1',
                   },
                 },
@@ -518,7 +790,7 @@ export const buildMockPipelineVersionV2 = (
               artifacts: {
                 input_iris_dataset: {
                   artifactType: {
-                    schemaTitle: ArtifactType.DATASET,
+                    schemaTitle: ArtifactType.HTML,
                     schemaVersion: '0.0.1',
                   },
                 },
@@ -536,7 +808,7 @@ export const buildMockPipelineVersionV2 = (
               artifacts: {
                 normalized_iris_dataset: {
                   artifactType: {
-                    schemaTitle: ArtifactType.DATASET,
+                    schemaTitle: ArtifactType.HTML,
                     schemaVersion: '0.0.1',
                   },
                 },
@@ -549,7 +821,7 @@ export const buildMockPipelineVersionV2 = (
               artifacts: {
                 normalized_iris_dataset: {
                   artifactType: {
-                    schemaTitle: ArtifactType.DATASET,
+                    schemaTitle: ArtifactType.HTML,
                     schemaVersion: '0.0.1',
                   },
                 },

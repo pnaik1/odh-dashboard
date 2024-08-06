@@ -212,6 +212,28 @@ describe('Compare runs', () => {
   describe('Metrics', () => {
     beforeEach(() => {
       initIntercepts();
+
+      cy.interceptOdh(
+        'GET /api/storage/:namespace/size',
+        {
+          query: {
+            key: 'metrics-visualization-pipeline/16dbff18-a3d5-4684-90ac-4e6198a9da0f/markdown-visualization/markdown_artifact',
+          },
+          path: { namespace: projectName },
+        },
+        { body: 61 },
+      );
+
+      cy.interceptOdh(
+        'GET /api/storage/:namespace',
+        {
+          query: {
+            key: 'metrics-visualization-pipeline/16dbff18-a3d5-4684-90ac-4e6198a9da0f/markdown-visualization/markdown_artifact',
+          },
+          path: { namespace: projectName },
+        },
+        '<html>helloWorld</html>',
+      );
       compareRunsGlobal.visit(projectName, mockExperiment.experiment_id, [
         mockRun.run_id,
         mockRun2.run_id,
@@ -313,6 +335,14 @@ describe('Compare runs', () => {
         .findExpandedConfusionMatrix()
         .find()
         .should('exist');
+    });
+
+    it('display markdown based on selections from Run list', () => {
+      compareRunsMetricsContent.findMarkdownTab().click();
+      const markDown = compareRunsMetricsContent
+        .findMarkdownTabContent()
+        .findMarkdownSelect(mockRun.run_id);
+      markDown.findMarkdown().should('have.text', 'helloWorld');
     });
 
     it('displays ROC curve empty state when no artifacts are found', () => {

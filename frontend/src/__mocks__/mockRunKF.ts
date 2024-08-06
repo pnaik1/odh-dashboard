@@ -1,6 +1,420 @@
 /* eslint-disable camelcase */
 import { PipelineRunKFv2, RuntimeStateKF, StorageStateKF } from '~/concepts/pipelines/kfTypes';
 
+export const buildMetricRunKF = (run: Partial<PipelineRunKFv2>): PipelineRunKFv2 => ({
+  experiment_id: 'c231cc38-3691-4498-a5f0-3305f2a2e5ee',
+  run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+  display_name: 'metric-2',
+  storage_state: StorageStateKF.AVAILABLE,
+  pipeline_version_reference: {
+    pipeline_id: 'b8915a31-2c05-4518-a36b-d65fc27f0116',
+    pipeline_version_id: 'fed8441e-8a79-45aa-bea8-ac3474781a11',
+  },
+  service_account: 'pipeline-runner-dspa',
+  created_at: '2024-08-01T05:47:32Z',
+  scheduled_at: '2024-08-01T05:47:32Z',
+  finished_at: '2024-08-01T05:47:52Z',
+  state: RuntimeStateKF.SUCCEEDED,
+  run_details: {
+    task_details: [
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '123d8b38-af2c-4d32-9995-d6e269fe2cea',
+        display_name: 'wine-classification',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-4162124047',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '1768d534-1dc8-4a75-9f1e-ae5355d02972',
+        display_name: 'digit-classification',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-2385283427',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '1fab61bc-3d93-4e9a-92c3-8d474942133d',
+        display_name: 'iris-sgdclassifier',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-1228799420',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '232f0d04-a626-45e3-a9f9-a48dd787e630',
+        display_name: 'wine-classification-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:47Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-983875308',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '27927f6f-a376-4bb4-a882-65f09d74d8ad',
+        display_name: 'executor',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SKIPPED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SKIPPED,
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '34331c9f-7a51-4452-a52d-51d83b6f21e3',
+        display_name: 'executor',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SKIPPED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SKIPPED,
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '3eff2302-2818-4866-a371-63fe179266a8',
+        display_name: 'executor',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SKIPPED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SKIPPED,
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '4c76c275-6c2f-4790-ae81-f3069ebcf074',
+        display_name: 'markdown-visualization-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:47Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-1810615256',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: '528ff44f-19fe-4f8b-9f60-5216dae1cbea',
+        display_name: 'html-visualization',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-1535422023',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'a3ed0e86-6a87-43ca-ad5b-87472984edce',
+        display_name: 'metrics-visualization-pipeline-nph6c',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:32Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:33Z',
+            state: RuntimeStateKF.RUNNING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-2835557459',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'a7fa8ac9-49e9-43d4-81e3-a824542507e4',
+        display_name: 'digit-classification-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:47Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-2549297592',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'a8b9a6ab-a91c-4292-b075-08f40e456a18',
+        display_name: 'executor',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SKIPPED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SKIPPED,
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'afd21ed3-0b56-4757-85ae-b90ea3e9d29f',
+        display_name: 'root',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.RUNNING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-642938693',
+          },
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-2570599817',
+          },
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-737415826',
+          },
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-1614169445',
+          },
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-191905569',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'c1388ce8-dc45-4693-a4f3-62660adad230',
+        display_name: 'html-visualization-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:47Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-3371702500',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'd4166c5c-353c-47b7-8208-aca6ef6dab33',
+        display_name: 'iris-sgdclassifier-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:42Z',
+        end_time: '2024-08-01T05:47:47Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-3411748585',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'de96e7fd-b1e2-4431-99ea-c177764bc69f',
+        display_name: 'markdown-visualization',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-910676355',
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'f76be423-6b8d-4b59-a807-9a3a7ffd1cdc',
+        display_name: 'executor',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:52Z',
+        end_time: '2024-08-01T05:47:52Z',
+        state: RuntimeStateKF.SKIPPED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:53Z',
+            state: RuntimeStateKF.SKIPPED,
+          },
+        ],
+      },
+      {
+        run_id: '785dd7f8-42ea-4bcc-9623-9f0b7ccfe0e7',
+        task_id: 'f9a595eb-e299-4711-ab34-10651c7b7567',
+        display_name: 'root-driver',
+        create_time: '2024-08-01T05:47:32Z',
+        start_time: '2024-08-01T05:47:32Z',
+        end_time: '2024-08-01T05:47:35Z',
+        state: RuntimeStateKF.SUCCEEDED,
+        state_history: [
+          {
+            update_time: '2024-08-01T05:47:33Z',
+            state: RuntimeStateKF.PENDING,
+          },
+          {
+            update_time: '2024-08-01T05:47:43Z',
+            state: RuntimeStateKF.SUCCEEDED,
+          },
+        ],
+        child_tasks: [
+          {
+            pod_name: 'metrics-visualization-pipeline-nph6c-3334176150',
+          },
+        ],
+      },
+    ],
+  },
+  state_history: [
+    {
+      update_time: '2024-08-01T05:47:32Z',
+      state: 'PENDING',
+    },
+    {
+      update_time: '2024-08-01T05:47:33Z',
+      state: 'RUNNING',
+    },
+    {
+      update_time: '2024-08-01T05:47:53Z',
+      state: 'SUCCEEDED',
+    },
+  ],
+  ...run,
+});
+
 export const buildMockRunKF = (run?: Partial<PipelineRunKFv2>): PipelineRunKFv2 => ({
   experiment_id: '1a1a1e71-25b6-46b6-a9eb-6ff1d8518be9',
   run_id: '17577391-357e-489f-b88a-f0f8895d5376',
