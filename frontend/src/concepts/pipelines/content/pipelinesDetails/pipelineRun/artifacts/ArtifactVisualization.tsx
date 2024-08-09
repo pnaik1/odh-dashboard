@@ -45,6 +45,7 @@ export const ArtifactVisualization: React.FC<ArtifactVisualizationProps> = ({ ar
   const [loading, setLoading] = React.useState<boolean>(false);
   const { namespace } = usePipelinesAPI();
   const isS3EndpointAvailable = useIsAreaAvailable(SupportedArea.S3_ENDPOINT).status;
+  const isArtifactApiAvailable = useIsAreaAvailable(SupportedArea.ARTIFACT_API).status;
   const artifactStorage = useArtifactStorage();
   const artifactType = artifact.getType();
 
@@ -170,7 +171,9 @@ export const ArtifactVisualization: React.FC<ArtifactVisualizationProps> = ({ ar
         </Bullseye>
       );
     }
+
     if (downloadedArtifact) {
+      console.log(downloadedArtifact);
       return (
         <Stack className="pf-v5-u-pt-lg pf-v5-u-pb-lg" hasGutter>
           {downloadedArtifactSize && downloadedArtifactSize > MAX_STORAGE_OBJECT_SIZE && (
@@ -186,7 +189,17 @@ export const ArtifactVisualization: React.FC<ArtifactVisualizationProps> = ({ ar
             <Title headingLevel="h3">Artifact details</Title>
           </StackItem>
           <StackItem>
-            <MarkdownView markdown={downloadedArtifact} />
+            {isArtifactApiAvailable ? (
+              <iframe
+                width="1000px"
+                height="6000px"
+                style={{ backgroundColor: 'white' }}
+                src={downloadedArtifact}
+                title="Artifact details"
+              />
+            ) : (
+              <MarkdownView markdown={downloadedArtifact} />
+            )}
           </StackItem>
         </Stack>
       );

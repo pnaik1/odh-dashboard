@@ -34,9 +34,7 @@ export const useArtifactStorage = (): ArtifactType => {
           .getArtifact({}, artifact.getId(), 'DOWNLOAD')
           .then((artifactStorage) => {
             if (artifactStorage.download_url) {
-              return fetch(artifactStorage.download_url).then((downloadObject) =>
-                downloadObject.text(),
-              );
+              return artifactStorage.download_url;
             }
             return Promise.reject();
           })
