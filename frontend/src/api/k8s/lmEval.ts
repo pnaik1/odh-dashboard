@@ -3,10 +3,12 @@ import {
   k8sListResource,
   k8sCreateResource,
 } from '@openshift/dynamic-plugin-sdk-utils';
+import { LmEvalFormData } from '#~/pages/lmEval/types';
 import { K8sAPIOptions, LMEvalKind } from '#~/k8sTypes';
 import { LMEvalModel } from '#~/api/models';
 import { applyK8sAPIOptions } from '#~/api/apiMergeUtils';
 import { kindApiVersion, translateDisplayNameForK8s } from '#~/concepts/k8s/utils';
+import { convertModelArgs } from '#~/pages/lmEval/lmEvalForm/utils.ts';
 
 export const listModelEvaluations = async (namespace: string): Promise<LMEvalKind[]> =>
   k8sListResource<LMEvalKind>({
@@ -17,42 +19,41 @@ export const listModelEvaluations = async (namespace: string): Promise<LMEvalKin
   }).then((listResource) => listResource.items);
 
 const assembleModelEvaluation = (
-  model: string,
-  evalConfig: {
-    batchSize?: string;
-    timeout?: number;
-    taskList: {
-      taskNames: string[];
-    };
-  },
+  data: LmEvalFormData,
   namespace: string,
-  name?: string,
+  batchSize?: string,
 ): LMEvalKind => ({
   apiVersion: kindApiVersion(LMEvalModel),
   kind: LMEvalModel.kind,
   metadata: {
-    name: name || `eval-${translateDisplayNameForK8s(model)}`,
+    name: data.evaluationName || `eval-${translateDisplayNameForK8s(data.model.name)}`,
     namespace,
   },
   spec: {
-    model,
-    ...evalConfig,
+    allowCodeExecution: data.allowRemoteCode,
+    allowOnline: data.allowOnline,
+    ...(batchSize && { batchSize }),
+    logSamples: true,
+    model: data.modelType,
+    modelArgs: convertModelArgs(data.model),
+    taskList: {
+      taskNames: data.tasks,
+    },
+    outputs: {
+      pvcManaged: {
+        size: '100Mi',
+      },
+    },
   },
 });
 
 export const createModelEvaluation = (
-  model: string,
-  evalConfig: {
-    batchSize?: string;
-    timeout?: number;
-    taskList: {
-      taskNames: string[];
-    };
-  },
+  data: LmEvalFormData,
   namespace: string,
+  batchSize?: string,
   opts?: K8sAPIOptions,
 ): Promise<LMEvalKind> => {
-  const resource = assembleModelEvaluation(model, evalConfig, namespace);
+  const resource = assembleModelEvaluation(data, namespace, batchSize);
   return k8sCreateResource<LMEvalKind>(
     applyK8sAPIOptions(
       {
