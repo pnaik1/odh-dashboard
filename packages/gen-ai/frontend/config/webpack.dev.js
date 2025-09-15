@@ -35,7 +35,9 @@ const getProxyHeaders = () => {
       return {};
     }
   }
-  return {};
+  return {
+    Authorization: `Bearer FAKE_BEARER_TOKEN`,
+  };
 };
 
 module.exports = merge(

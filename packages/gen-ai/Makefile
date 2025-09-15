@@ -12,7 +12,7 @@ dev-install-dependencies: ## Install dependencies for frontend
 
 .PHONY: dev-bff
 dev-bff: ## Run only the bff in development mode
-	cd bff && make run MOCK_LS_CLIENT=true
+	cd bff && make run MOCK_LS_CLIENT=true MOCK_K8S_CLIENT=true
 
 .PHONY: dev-frontend
 dev-frontend: ## Run only the frontend in development mode
