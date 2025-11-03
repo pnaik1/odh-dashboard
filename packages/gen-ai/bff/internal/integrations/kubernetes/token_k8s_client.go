@@ -156,21 +156,60 @@ func newTokenKubernetesClient(token string, logger *slog.Logger, envConfig confi
 	}, nil
 }
 
-// RequestIdentity is unused because the token already represents the user identity.
-// This endpoint is used only on dev mode that is why is safe to ignore permissions errors
-func (kc *TokenKubernetesClient) GetNamespaces(ctx context.Context, _ *integrations.RequestIdentity) ([]corev1.Namespace, error) {
+// GetNamespaces returns the list of namespaces/projects the user has access to
+// For OpenShift, we query the project.openshift.io API which non-admin users can access
+// This returns only the projects the user has permissions to view
+func (kc *TokenKubernetesClient) GetNamespaces(ctx context.Context, identity *integrations.RequestIdentity) ([]corev1.Namespace, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Using controller-runtime client - much simpler!
-	var nsList corev1.NamespaceList
-	err := kc.Client.List(ctx, &nsList)
+	// Check if user is a cluster admin first
+	isAdmin, err := kc.IsClusterAdmin(ctx, identity)
 	if err != nil {
-		kc.Logger.Error("user is not allowed to list namespaces or failed to list namespaces")
-		return []corev1.Namespace{}, fmt.Errorf("failed to list namespaces: %w", err)
+		kc.Logger.Warn("failed to check cluster admin status", "error", err)
+		// Continue with project listing even if cluster admin check fails
+	} else if isAdmin {
+		kc.Logger.Debug("user is cluster-admin, returning all namespaces")
+		// Cluster admins can list all namespaces directly
+		var nsList corev1.NamespaceList
+		err := kc.Client.List(ctx, &nsList)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list namespaces: %w", err)
+		}
+		return nsList.Items, nil
 	}
 
-	return nsList.Items, nil
+	// For non-admin users, query the OpenShift projects API
+	// project.openshift.io/v1 projects is a cluster-scoped resource that returns
+	// only the projects the user has access to (unlike namespaces which requires cluster-wide list permission)
+	config := rest.CopyConfig(kc.Config)
+	config.APIPath = "/apis"
+	config.GroupVersion = &schema.GroupVersion{Group: "project.openshift.io", Version: "v1"}
+	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+
+	restClient, err := rest.RESTClientFor(config)
+	if err != nil {
+		kc.Logger.Error("failed to create REST client for projects API", "error", err)
+		return nil, fmt.Errorf("failed to create REST client: %w", err)
+	}
+
+	// List projects using the OpenShift projects API
+	result := restClient.Get().Resource("projects").Do(ctx)
+	rawBytes, err := result.Raw()
+	if err != nil {
+		kc.Logger.Error("failed to list projects", "error", err)
+		return nil, fmt.Errorf("failed to list projects: %w", err)
+	}
+
+	// Parse the response as a NamespaceList since projects are essentially namespaces with additional metadata
+	var projectList corev1.NamespaceList
+	if err := json.Unmarshal(rawBytes, &projectList); err != nil {
+		kc.Logger.Error("failed to unmarshal projects response", "error", err)
+		return nil, fmt.Errorf("failed to unmarshal projects: %w", err)
+	}
+
+	kc.Logger.Info("successfully listed projects for non-admin user", "count", len(projectList.Items))
+	return projectList.Items, nil
 }
 
 // CanListNamespaces performs a SubjectAccessReview to check if the user has permission to list namespaces

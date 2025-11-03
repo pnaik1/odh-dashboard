@@ -234,8 +234,10 @@ func (app *App) Routes() http.Handler {
 	// AI Assets Models (Kubernetes)
 	apiRouter.GET(constants.ModelsAAPath, app.AttachNamespace(app.RequireAccessToService(app.ModelsAAHandler)))
 
-	// Settings path namespace endpoints. This endpoint will get all the namespaces
-	apiRouter.GET(constants.NamespacesPath, app.RequireAccessToService(app.RequireNamespaceListAccess(app.GetNamespaceHandler)))
+	// Settings path namespace endpoints. This endpoint will get all the namespaces/projects the user has access to
+	// Note: We don't use RequireNamespaceListAccess middleware here because non-admin users
+	// can list projects (project.openshift.io) but not cluster-wide namespaces
+	apiRouter.GET(constants.NamespacesPath, app.RequireAccessToService(app.GetNamespaceHandler))
 
 	// Identity
 	apiRouter.GET(constants.UserPath, app.RequireAccessToService(app.GetCurrentUserHandler))
