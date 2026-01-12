@@ -81,11 +81,11 @@ func TestProviderCreationUtilities(t *testing.T) {
 	assert.Equal(t, "inline::sentence-transformers", provider3.ProviderType)
 	assert.Equal(t, EmptyConfig(), provider3.Config)
 
-	// Test NewVLLMProvider
+	// Test NewVLLMProvider (llama-stack v0.4.0+ uses base_url)
 	provider4 := NewVLLMProvider("vllm-1", "http://vllm.example.com")
 	assert.Equal(t, "vllm-1", provider4.ProviderID)
 	assert.Equal(t, "remote::vllm", provider4.ProviderType)
-	assert.Equal(t, "http://vllm.example.com", provider4.Config["url"])
+	assert.Equal(t, "http://vllm.example.com", provider4.Config["base_url"])
 
 	// Test adding providers to config
 	config.AddInferenceProvider(provider1)
@@ -316,8 +316,8 @@ func TestGetModelProviderInfo_LoadFromYAML(t *testing.T) {
 		},
 		{
 			name:                 "Extract embedding model",
-			modelID:              "granite-embedding-125m",
-			expectedModelID:      "granite-embedding-125m",
+			modelID:              "ibm-granite/granite-embedding-125m-english",
+			expectedModelID:      "ibm-granite/granite-embedding-125m-english",
 			expectedProviderID:   "sentence-transformers",
 			expectedProviderType: "inline::sentence-transformers",
 			expectedURL:          "", // No URL in config for this provider
@@ -434,7 +434,7 @@ func TestGetModelProviderInfo_MaaSDetection(t *testing.T) {
 		},
 		{
 			name:    "Sentence transformers model is not MaaS",
-			modelID: "granite-embedding-125m",
+			modelID: "ibm-granite/granite-embedding-125m-english",
 			isMaaS:  false,
 		},
 		{

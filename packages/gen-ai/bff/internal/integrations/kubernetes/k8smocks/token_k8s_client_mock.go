@@ -423,7 +423,7 @@ func (m *TokenKubernetesClientMock) InstallLlamaStackDistribution(ctx context.Co
 			Namespace: namespace,
 		},
 		Data: map[string]string{
-			"run.yaml": `# Llama Stack Configuration
+			"config.yaml": `# Llama Stack Configuration
 version: "2"
 image_name: rh
 apis:
@@ -440,7 +440,7 @@ providers:
   - provider_id: vllm-inference-1
     provider_type: remote::vllm
     config:
-      url: http://mock-model-predictor.` + namespace + `.svc.cluster.local:8080/v1
+      base_url: http://mock-model-predictor.` + namespace + `.svc.cluster.local:8080/v1
       max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
       api_token: ${env.VLLM_API_TOKEN:=fake}
       tls_verify: ${env.VLLM_TLS_VERIFY:=true}
@@ -521,7 +521,7 @@ registered_resources:
   models:
     - metadata:
         embedding_dimension: 768
-      model_id: granite-embedding-125m
+      model_id: ibm-granite/granite-embedding-125m-english
       provider_id: sentence-transformers
       provider_model_id: ibm-granite/granite-embedding-125m-english
       model_type: embedding
@@ -564,7 +564,7 @@ server:
 			Replicas: 1,
 			Server: lsdapi.ServerSpec{
 				ContainerSpec: lsdapi.ContainerSpec{
-					Command: []string{"/bin/sh", "-c", "llama stack run /etc/llama-stack/run.yaml"},
+					Command: []string{"/bin/sh", "-c", "llama stack run /etc/llama-stack/config.yaml"},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceCPU:    resource.MustParse("250m"),

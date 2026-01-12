@@ -1003,7 +1003,7 @@ func (kc *TokenKubernetesClient) InstallLlamaStackDistribution(ctx context.Conte
 			Replicas: 1,
 			Server: lsdapi.ServerSpec{
 				ContainerSpec: lsdapi.ContainerSpec{
-					Command: []string{"/bin/sh", "-c", "llama stack run /etc/llama-stack/run.yaml"},
+					Command: []string{"/bin/sh", "-c", "llama stack run /etc/llama-stack/config.yaml"},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceCPU:    resource.MustParse("250m"),
@@ -1079,7 +1079,7 @@ func (kc *TokenKubernetesClient) createConfigMapWithOwnerReference(ctx context.C
 			},
 		},
 		Data: map[string]string{
-			"run.yaml": runYAML,
+			constants.LlamaStackConfigYAMLKey: runYAML,
 		},
 	}
 
@@ -1569,9 +1569,14 @@ func (kc *TokenKubernetesClient) loadLlamaStackConfig(ctx context.Context, ident
 		return nil, fmt.Errorf("failed to get configmap: %w", err)
 	}
 
-	runYAML, ok := configMap.Data[constants.LlamaStackRunYAMLKey]
+	// Try new config.yaml key first (llama-stack v0.4.0+), fall back to run.yaml for backward compatibility
+	runYAML, ok := configMap.Data[constants.LlamaStackConfigYAMLKey]
 	if !ok {
-		return nil, fmt.Errorf("run.yaml not found in configmap")
+		// Fallback to legacy run.yaml key for older deployments
+		runYAML, ok = configMap.Data[constants.LlamaStackRunYAMLKey]
+		if !ok {
+			return nil, fmt.Errorf("config.yaml not found in configmap (also checked legacy run.yaml)")
+		}
 	}
 
 	// Parse YAML into config

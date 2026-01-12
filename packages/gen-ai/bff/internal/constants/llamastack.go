@@ -5,7 +5,12 @@ const (
 	// LlamaStackConfigMapName is the default name of the LlamaStack configuration ConfigMap
 	LlamaStackConfigMapName = "llama-stack-config"
 
-	// LlamaStackRunYAMLKey is the key for the run.yaml configuration in the ConfigMap
+	// LlamaStackConfigYAMLKey is the key for the config.yaml configuration in the ConfigMap
+	// Note: Changed from run.yaml to config.yaml in llama-stack v0.4.0
+	LlamaStackConfigYAMLKey = "config.yaml"
+
+	// LlamaStackRunYAMLKey is deprecated, use LlamaStackConfigYAMLKey instead
+	// Kept for backward compatibility during migration
 	LlamaStackRunYAMLKey = "run.yaml"
 )
 

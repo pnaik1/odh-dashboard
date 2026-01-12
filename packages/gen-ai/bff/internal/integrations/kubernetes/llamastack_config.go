@@ -337,22 +337,24 @@ func NewSentenceTransformerProvider() Provider {
 }
 
 // NewVLLMProvider creates a new vLLM provider with the given URL
+// Note: llama-stack v0.4.0+ uses "base_url" instead of "url" for inference providers
 func NewVLLMProvider(providerID string, url string) Provider {
 	return Provider{
 		ProviderID:   providerID,
 		ProviderType: "remote::vllm",
 		Config: map[string]interface{}{
-			"url": url,
+			"base_url": url,
 		},
 	}
 }
 
 // AddVLLMProviderAndModel adds a vLLM provider and its corresponding model to the config
 // This is a helper for building LlamaStack configurations with vLLM providers
+// Note: llama-stack v0.4.0+ uses "base_url" instead of "url" for inference providers
 func (c *LlamaStackConfig) AddVLLMProviderAndModel(providerID, endpointURL string, index int, modelID, modelType string, metadata map[string]interface{}) {
 	// Create provider config
 	providerConfig := EmptyConfig()
-	providerConfig["url"] = endpointURL
+	providerConfig["base_url"] = endpointURL
 	providerConfig["max_tokens"] = "${env.VLLM_MAX_TOKENS:=4096}"
 	providerConfig["api_token"] = fmt.Sprintf("${env.VLLM_API_TOKEN_%d:=fake}", index+1)
 	providerConfig["tls_verify"] = "${env.VLLM_TLS_VERIFY:=true}"
@@ -461,7 +463,12 @@ func (c *LlamaStackConfig) GetModelProviderInfo(modelID string) (*types.ModelPro
 	for _, provider := range c.Providers.Inference {
 		if provider.ProviderID == providerID {
 			url := ""
-			if urlVal, ok := provider.Config["url"]; ok {
+			// Check for base_url first (llama-stack v0.4.0+), then fall back to url for backward compatibility
+			if urlVal, ok := provider.Config["base_url"]; ok {
+				if urlStr, ok := urlVal.(string); ok {
+					url = cleanEnvVar(urlStr)
+				}
+			} else if urlVal, ok := provider.Config["url"]; ok {
 				if urlStr, ok := urlVal.(string); ok {
 					url = cleanEnvVar(urlStr)
 				}

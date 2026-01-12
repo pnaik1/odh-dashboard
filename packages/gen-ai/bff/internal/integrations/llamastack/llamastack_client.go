@@ -38,8 +38,10 @@ func NewLlamaStackClient(baseURL string, authToken string, insecureSkipVerify bo
 		Timeout: 8 * time.Minute, // Overall request timeout (matches server WriteTimeout)
 	}
 
+	// Note: Changed from /v1/openai/v1 to /v1 in llama-stack v0.4.0
+	// The /v1/openai/v1/* routes were removed, use /v1/* routes instead
 	client := openai.NewClient(
-		option.WithBaseURL(baseURL+"/v1/openai/v1"),
+		option.WithBaseURL(baseURL+"/v1"),
 		option.WithAPIKey(authToken),
 		option.WithHTTPClient(httpClient),
 	)
