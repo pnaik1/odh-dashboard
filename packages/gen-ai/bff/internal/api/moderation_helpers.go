@@ -43,15 +43,11 @@ func (app *App) checkModeration(ctx context.Context, input string, opts nemo.Gua
 // buildInlineGuardrailOptions constructs a GuardrailsOptions with a fully inline config,
 // allowing per-request model, rails, and prompt customisation without a cluster ConfigMap.
 //
-// endpointURL is the raw base URL of the guardrail model (e.g. vLLM InferenceService URL,
-// external model URL, or MaaS API URL).  The BFF resolves this via GetModelProviderInfo so
-// the frontend never needs to send credentials or URLs.
+// A rail is enabled when its corresponding prompt is non-empty — no separate boolean needed.
 func buildInlineGuardrailOptions(
 	endpointURL string,
 	modelID string,
 	apiKey string,
-	inputEnabled bool,
-	outputEnabled bool,
 	inputPrompt string,
 	outputPrompt string,
 ) nemo.GuardrailsOptions {
@@ -69,24 +65,19 @@ func buildInlineGuardrailOptions(
 		},
 	}
 
-	if inputEnabled {
+	if inputPrompt != "" {
 		config.Rails.Input = &nemo.InlineGuardrailRailFlows{
 			Flows: []string{nemo.FlowSelfCheckInput},
 		}
-	}
-	if outputEnabled {
-		config.Rails.Output = &nemo.InlineGuardrailRailFlows{
-			Flows: []string{nemo.FlowSelfCheckOutput},
-		}
-	}
-
-	if inputEnabled && inputPrompt != "" {
 		config.Prompts = append(config.Prompts, nemo.InlineGuardrailPrompt{
 			Task:    nemo.TaskSelfCheckInput,
 			Content: inputPrompt,
 		})
 	}
-	if outputEnabled && outputPrompt != "" {
+	if outputPrompt != "" {
+		config.Rails.Output = &nemo.InlineGuardrailRailFlows{
+			Flows: []string{nemo.FlowSelfCheckOutput},
+		}
 		config.Prompts = append(config.Prompts, nemo.InlineGuardrailPrompt{
 			Task:    nemo.TaskSelfCheckOutput,
 			Content: outputPrompt,

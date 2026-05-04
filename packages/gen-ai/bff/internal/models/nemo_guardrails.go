@@ -42,10 +42,13 @@ type GuardrailInlineConfig struct {
 	// from the main model's subscription. Falls back to the top-level subscription when omitted.
 	GuardrailSubscription string `json:"guardrail_subscription,omitempty"`
 
-	InputEnabled  bool   `json:"input_enabled,omitempty"`
-	OutputEnabled bool   `json:"output_enabled,omitempty"`
-	InputPrompt   string `json:"input_prompt,omitempty"`
-	OutputPrompt  string `json:"output_prompt,omitempty"`
+	// InputPrompt is the policy prompt for input moderation. Its presence enables input rails.
+	// Must contain the {{ user_input }} placeholder.
+	InputPrompt string `json:"input_prompt,omitempty"`
+
+	// OutputPrompt is the policy prompt for output moderation. Its presence enables output rails.
+	// Must contain the {{ bot_response }} placeholder.
+	OutputPrompt string `json:"output_prompt,omitempty"`
 }
 
 // ResolveSubscription returns the subscription to use for MaaS token generation.

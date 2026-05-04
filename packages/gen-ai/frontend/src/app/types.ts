@@ -90,6 +90,14 @@ export type MCPServerConfig = {
   allowed_tools?: string[]; // Backend rules: undefined=all, []=none, ["x"]=specific
 };
 
+export type GuardrailInlineConfig = {
+  guardrail_model: string;
+  guardrail_model_source_type?: 'namespace' | 'custom_endpoint' | 'maas';
+  guardrail_subscription?: string;
+  input_prompt?: string;
+  output_prompt?: string;
+};
+
 export type CreateResponseRequest = {
   input: string;
   model: string;
@@ -99,8 +107,7 @@ export type CreateResponseRequest = {
   instructions?: string;
   stream?: boolean;
   mcp_servers?: MCPServerConfig[];
-  input_shield_id?: string;
-  output_shield_id?: string;
+  guardrail_config?: GuardrailInlineConfig;
   model_source_type?: string;
   subscription?: string;
 };

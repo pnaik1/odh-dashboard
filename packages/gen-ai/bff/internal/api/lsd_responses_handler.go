@@ -357,15 +357,13 @@ func (app *App) LlamaStackCreateResponseHandler(w http.ResponseWriter, r *http.R
 			baseURL,
 			guardrailModelName,
 			apiKey,
-			createRequest.GuardrailConfig.InputEnabled,
-			createRequest.GuardrailConfig.OutputEnabled,
 			createRequest.GuardrailConfig.InputPrompt,
 			createRequest.GuardrailConfig.OutputPrompt,
 		)
 
 		// Input moderation: check user message before sending to LlamaStack.
 		// Fail open on moderation errors to avoid blocking legitimate requests.
-		if createRequest.GuardrailConfig.InputEnabled {
+		if createRequest.GuardrailConfig.InputPrompt != "" {
 			result, modErr := app.checkModeration(ctx, createRequest.Input, guardrailOpts, nemo.RoleUser)
 			if modErr != nil {
 				app.logger.Warn("Input moderation check failed, failing open", "error", modErr)
@@ -1066,7 +1064,14 @@ func (app *App) resolveMaaSModelInferenceURL(ctx context.Context, identity *inte
 
 	for _, m := range maasModels {
 		if m.ID == bareID {
-			return m.URL, nil
+			// MaaS catalog returns the raw gateway URL (http, no /v1).
+			// Normalize to vLLM-compatible format (strip trailing slash, ensure /v1 suffix)
+			// so NeMo receives the correct openai_api_base.
+			url := strings.TrimSuffix(m.URL, "/")
+			if !strings.HasSuffix(url, "/v1") {
+				url += "/v1"
+			}
+			return url, nil
 		}
 	}
 

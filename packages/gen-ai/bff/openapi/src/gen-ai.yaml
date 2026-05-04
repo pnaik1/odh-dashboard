@@ -3109,16 +3109,6 @@ components:
             field which applies to the main model — use this when the guardrail model belongs to a
             different MaaS subscription than the main model. When omitted, the top-level subscription
             is used as a fallback.
-        input_enabled:
-          type: boolean
-          default: false
-          example: true
-          description: Enable input (user message) moderation before sending to the inference model.
-        output_enabled:
-          type: boolean
-          default: false
-          example: true
-          description: Enable output (assistant response) moderation before returning to the client.
         input_prompt:
           type: string
           example: |
@@ -3126,8 +3116,8 @@ components:
             User Input: "{{ user_input }}"
             Should this be BLOCKED? Answer ONLY with "yes" or "no". Answer:
           description: >-
-            Custom prompt template for input moderation. Must contain the {{ user_input }} placeholder.
-            When omitted, the NeMo default self-check input prompt is used.
+            Prompt template for input (user message) moderation. Its presence enables the input rail —
+            no separate input_enabled flag is needed. Must contain the {{ user_input }} placeholder.
         output_prompt:
           type: string
           example: |
@@ -3135,8 +3125,8 @@ components:
             Bot Response: "{{ bot_response }}"
             Should this be BLOCKED? Answer ONLY with "yes" or "no". Answer:
           description: >-
-            Custom prompt template for output moderation. Must contain the {{ bot_response }} placeholder.
-            When omitted, the NeMo default self-check output prompt is used.
+            Prompt template for output (assistant response) moderation. Its presence enables the output
+            rail — no separate output_enabled flag is needed. Must contain the {{ bot_response }} placeholder.
 
     # Clean Response Schema - Preserves LlamaStack Structure
     ResponseData:

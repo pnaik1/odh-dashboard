@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MessageBox, ChatbotWelcomePrompt } from '@patternfly/chatbot';
-import { GuardrailModelConfig, MCPServerFromAPI, TokenInfo } from '~/app/types';
+import { MCPServerFromAPI, TokenInfo } from '~/app/types';
 import { ServerStatusInfo } from '~/app/hooks/useMCPServerStatuses';
 import useChatbotMessages, { UseChatbotMessagesReturn } from './hooks/useChatbotMessages';
 import {
@@ -14,6 +14,7 @@ import {
   selectGuardrail,
   selectGuardrailUserInputEnabled,
   selectGuardrailModelOutputEnabled,
+  selectGuardrailSubscription,
   selectRagEnabled,
   selectKnowledgeMode,
   selectSelectedVectorStoreId,
@@ -33,7 +34,6 @@ interface ChatbotConfigInstanceProps {
   showWelcomePrompt?: boolean;
   welcomeDescription?: string;
   onMessagesHookReady?: (hook: UseChatbotMessagesReturn) => void;
-  guardrailModelConfigs?: GuardrailModelConfig[];
   configIndex?: number;
   isCompareMode?: boolean;
 }
@@ -49,7 +49,6 @@ export const ChatbotConfigInstance: React.FC<ChatbotConfigInstanceProps> = ({
   showWelcomePrompt = false,
   welcomeDescription = 'Welcome to the playground',
   onMessagesHookReady,
-  guardrailModelConfigs = [],
   configIndex,
   isCompareMode,
 }) => {
@@ -84,6 +83,7 @@ export const ChatbotConfigInstance: React.FC<ChatbotConfigInstanceProps> = ({
   const guardrailModelOutputEnabled = useChatbotConfigStore(
     selectGuardrailModelOutputEnabled(configId),
   );
+  const guardrailSubscription = useChatbotConfigStore(selectGuardrailSubscription(configId));
 
   // Build guardrails config for the messages hook
   const guardrailsConfig = React.useMemo(
@@ -92,8 +92,9 @@ export const ChatbotConfigInstance: React.FC<ChatbotConfigInstanceProps> = ({
       guardrail,
       userInputEnabled: guardrailUserInputEnabled,
       modelOutputEnabled: guardrailModelOutputEnabled,
+      guardrailSubscription,
     }),
-    [guardrail, guardrailUserInputEnabled, guardrailModelOutputEnabled],
+    [guardrail, guardrailUserInputEnabled, guardrailModelOutputEnabled, guardrailSubscription],
   );
 
   const getToolSelections = React.useCallback(
@@ -118,7 +119,6 @@ export const ChatbotConfigInstance: React.FC<ChatbotConfigInstanceProps> = ({
     toolSelections: getToolSelections,
     namespace,
     guardrailsConfig,
-    guardrailModelConfigs,
     subscription: selectedSubscription,
     configIndex,
     isCompareMode,
