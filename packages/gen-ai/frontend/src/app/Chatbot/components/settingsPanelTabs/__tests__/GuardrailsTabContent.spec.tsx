@@ -61,7 +61,7 @@ const baseContextValue = {
 };
 
 const renderWithContext = (
-  contextOverrides: Partial<typeof baseContextValue> = {},
+  contextOverrides: Partial<React.ContextType<typeof ChatbotContext>> = {},
   configId = 'default',
 ) =>
   render(

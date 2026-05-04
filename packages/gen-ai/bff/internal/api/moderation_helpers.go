@@ -18,8 +18,7 @@ type ModerationResult struct {
 
 // checkModeration sends content to the NeMo Guardrails API for safety evaluation.
 //
-// opts identifies the guardrail configuration — either a pre-created config_id (ConfigMap on
-// the cluster) or a fully inline config with model, rails, and prompts per-request.
+// opts carries the inline guardrail config (model, rails, and prompts) built per-request.
 //
 // role controls which rails fire: nemo.RoleUser ("user") for input moderation,
 // nemo.RoleAssistant ("assistant") for output moderation.

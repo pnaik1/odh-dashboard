@@ -16,7 +16,6 @@ import {
   FileCitationAnnotation,
   FileUploadJobResponse,
   FileUploadStatusResponse,
-  GuardrailsStatus,
   LlamaModel,
   LlamaStackDistributionModel,
   MCPConnectionStatus,
@@ -28,7 +27,6 @@ import {
   MLflowRegisterPromptRequest,
   OutputItem,
   ResponseMetrics,
-  SafetyConfigResponse,
   NemoGuardrailsStatus,
   SimplifiedResponseData,
   SourceItem,
@@ -658,9 +656,6 @@ export const getMaaSModels = modArchRestGET<MaaSModel[]>('/maas/models');
 export const generateMaaSToken = modArchRestCREATE<MaaSTokenResponse, MaaSTokenRequest>(
   '/maas/tokens',
 );
-
-export const getGuardrailsStatus = modArchRestGET<GuardrailsStatus>('/guardrails/status');
-export const getSafetyConfig = modArchRestGET<SafetyConfigResponse>('/lsd/safety');
 
 /** NemoGuardrails Endpoints */
 export const getNemoGuardrailsStatus =
