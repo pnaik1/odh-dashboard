@@ -16,21 +16,15 @@ type ModerationResult struct {
 	ViolationReason string
 }
 
-// checkModeration sends content to the NeMo Guardrails API for safety evaluation.
-//
-// opts carries the inline guardrail config (model, rails, and prompts) built per-request.
-//
-// role controls which rails fire: nemo.RoleUser ("user") for input moderation,
-// nemo.RoleAssistant ("assistant") for output moderation.
-func (app *App) checkModeration(ctx context.Context, input string, opts nemo.GuardrailsOptions, role string) (*ModerationResult, error) {
-	app.logger.Debug("Moderation check started", "inline", opts.Config != nil, "role", role, "input_length", len(input))
+func (app *App) checkModeration(ctx context.Context, messages []nemo.Message, opts nemo.GuardrailsOptions) (*ModerationResult, error) {
+	app.logger.Debug("Moderation check started", "inline", opts.Config != nil, "messageCount", len(messages))
 
 	nemoClient, err := helper.GetContextNemoClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NeMo Guardrails client: %w", err)
 	}
 
-	response, err := nemoClient.CheckGuardrails(ctx, input, opts, role)
+	response, err := nemoClient.CheckGuardrails(ctx, messages, opts)
 	if err != nil {
 		app.logger.Debug("NeMo guardrail check error", "error", err)
 		return nil, fmt.Errorf("guardrail check failed: %w", err)
@@ -153,33 +147,4 @@ func extractResponseText(response *ResponseData) string {
 		}
 	}
 	return strings.Join(textParts, " ")
-}
-
-// createGuardrailViolationResponse builds a non-streaming guardrail refusal ResponseData.
-func createGuardrailViolationResponse(responseID string, model string, isInput bool) ResponseData {
-	message := constants.OutputGuardrailViolationMessage
-	if isInput {
-		message = constants.InputGuardrailViolationMessage
-	}
-
-	return ResponseData{
-		ID:        responseID,
-		Model:     model,
-		Status:    "completed",
-		CreatedAt: 0,
-		Output: []OutputItem{
-			{
-				ID:     "msg_guardrail",
-				Type:   "message",
-				Role:   "assistant",
-				Status: "completed",
-				Content: []ContentItem{
-					{
-						Type:    "refusal",
-						Refusal: message,
-					},
-				},
-			},
-		},
-	}
 }

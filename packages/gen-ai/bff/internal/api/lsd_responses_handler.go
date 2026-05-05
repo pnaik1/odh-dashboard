@@ -344,9 +344,10 @@ func (app *App) LlamaStackCreateResponseHandler(w http.ResponseWriter, r *http.R
 		baseURL, apiKey, err := app.getGuardrailModelEndpointAndKey(ctx, createRequest.GuardrailConfig.GuardrailModel, createRequest.GuardrailConfig.GuardrailModelSourceType, createRequest.GuardrailConfig.ResolveSubscription(createRequest.Subscription))
 		if err != nil {
 			app.logger.Error("Failed to resolve guardrail model endpoint", "model", createRequest.GuardrailConfig.GuardrailModel, "error", err)
-			app.serverErrorResponse(w, r, fmt.Errorf("failed to resolve guardrail model: %w", err))
+			app.serviceUnavailableResponse(w, r, errors.New(constants.GuardrailServiceUnavailableMessage))
 			return
 		}
+
 		// NeMo needs the bare model name (e.g. "claude-haiku-4-5-20251001"), not the
 		// LlamaStack-qualified ID (e.g. "endpoint-1/claude-haiku-4-5-20251001").
 		guardrailModelName := createRequest.GuardrailConfig.GuardrailModel
@@ -361,21 +362,24 @@ func (app *App) LlamaStackCreateResponseHandler(w http.ResponseWriter, r *http.R
 			createRequest.GuardrailConfig.OutputPrompt,
 		)
 
-		// Input moderation: check user message before sending to LlamaStack.
-		// Fail open on moderation errors to avoid blocking legitimate requests.
 		if createRequest.GuardrailConfig.InputPrompt != "" {
-			result, modErr := app.checkModeration(ctx, createRequest.Input, guardrailOpts, nemo.RoleUser)
-			if modErr != nil {
-				app.logger.Warn("Input moderation check failed, failing open", "error", modErr)
-			} else if result != nil && result.Flagged {
-				app.logger.Info("Input moderation flagged content", "reason", result.ViolationReason)
-				if createRequest.Stream {
-					app.sendInputGuardrailViolationStreaming(w, createRequest.Model)
-				} else {
-					response := createGuardrailViolationResponse("resp_guardrail", createRequest.Model, true)
-					apiResponse := llamastack.APIResponse{Data: response}
-					_ = app.WriteJSON(w, http.StatusCreated, apiResponse, nil)
+			inputMessages := make([]nemo.Message, 0, len(createRequest.ChatContext)+1)
+			for _, msg := range createRequest.ChatContext {
+				if msg.Role == "user" {
+					inputMessages = append(inputMessages, nemo.Message{Role: nemo.RoleUser, Content: msg.Content})
 				}
+			}
+			inputMessages = append(inputMessages, nemo.Message{Role: nemo.RoleUser, Content: createRequest.Input})
+
+			result, modErr := app.checkModeration(ctx, inputMessages, guardrailOpts)
+			if modErr != nil {
+				app.logger.Error("Input moderation check failed", "error", modErr)
+				app.serviceUnavailableResponse(w, r, errors.New(constants.GuardrailServiceUnavailableMessage))
+				return
+			}
+			if result != nil && result.Flagged {
+				app.logger.Info("Input moderation flagged content", "reason", result.ViolationReason)
+				app.guardrailViolationResponse(w, r, constants.GuardrailInputViolationCode, "input blocked by safety guardrails")
 				return
 			}
 		}
@@ -551,15 +555,16 @@ func (app *App) handleNonStreamingResponse(w http.ResponseWriter, r *http.Reques
 	if hasOutputModeration(params.GuardrailOpts) {
 		responseText := extractResponseText(&responseData)
 		if responseText != "" {
-			result, modErr := app.checkModeration(ctx, responseText, params.GuardrailOpts, nemo.RoleAssistant)
+			outputMessages := []nemo.Message{{Role: nemo.RoleAssistant, Content: responseText}}
+			result, modErr := app.checkModeration(ctx, outputMessages, params.GuardrailOpts)
 			if modErr != nil {
-				app.logger.Warn("Output moderation check failed, failing open", "error", modErr)
-			} else if result != nil && result.Flagged {
+				app.logger.Error("Output moderation check failed", "error", modErr)
+				app.serviceUnavailableResponse(w, r, errors.New(constants.GuardrailServiceUnavailableMessage))
+				return
+			}
+			if result != nil && result.Flagged {
 				app.logger.Info("Output moderation flagged content", "reason", result.ViolationReason)
-				violationResponse := createGuardrailViolationResponse("resp_guardrail", params.Model, false)
-				violationResponse.PreviousResponseID = params.PreviousResponseID
-				apiResponse := llamastack.APIResponse{Data: violationResponse}
-				_ = app.WriteJSON(w, http.StatusCreated, apiResponse, nil)
+				app.guardrailViolationResponse(w, r, constants.GuardrailOutputViolationCode, "output blocked by safety guardrails")
 				return
 			}
 		}
@@ -584,112 +589,6 @@ func (app *App) handleNonStreamingResponse(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-}
-
-// sendInputGuardrailViolationStreaming sends a guardrail violation response in streaming SSE format
-// using the OpenAI standard refusal content type and streaming events.
-// This is used when input moderation flags content and the client requested streaming.
-func (app *App) sendInputGuardrailViolationStreaming(w http.ResponseWriter, model string) {
-	// Check if ResponseWriter supports streaming
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		// Fallback to JSON if streaming not supported
-		responseData := createGuardrailViolationResponse("", model, true)
-		apiResponse := llamastack.APIResponse{Data: responseData}
-		_ = app.WriteJSON(w, http.StatusCreated, apiResponse, nil) // Best effort - client may have disconnected
-		return
-	}
-
-	// Set SSE headers
-	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache, no-transform")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Accel-Buffering", "no")
-
-	message := constants.InputGuardrailViolationMessage
-
-	// Generate IDs for the response
-	responseID := "resp_guardrail_" + fmt.Sprintf("%d", getCurrentTimestamp())
-	itemID := "msg_guardrail"
-
-	// Send response.created event
-	createdEvent := &StreamingEvent{
-		Type:           "response.created",
-		SequenceNumber: 0,
-		Response: &ResponseData{
-			ID:        responseID,
-			Model:     model,
-			Status:    "in_progress",
-			CreatedAt: getCurrentTimestamp(),
-		},
-	}
-	if eventData, err := json.Marshal(createdEvent); err == nil {
-		fmt.Fprintf(w, "data: %s\n\n", eventData)
-		flusher.Flush()
-	}
-
-	// Send response.refusal.delta with the guardrail message (OpenAI standard)
-	refusalDeltaEvent := &StreamingEvent{
-		Type:           "response.refusal.delta",
-		SequenceNumber: 1,
-		ItemID:         itemID,
-		OutputIndex:    0,
-		ContentIndex:   0,
-		Delta:          message,
-	}
-	if eventData, err := json.Marshal(refusalDeltaEvent); err == nil {
-		fmt.Fprintf(w, "data: %s\n\n", eventData)
-		flusher.Flush()
-	}
-
-	// Send response.refusal.done (OpenAI standard)
-	refusalDoneEvent := &StreamingEvent{
-		Type:           "response.refusal.done",
-		SequenceNumber: 2,
-		ItemID:         itemID,
-		OutputIndex:    0,
-		ContentIndex:   0,
-		Refusal:        message,
-	}
-	if eventData, err := json.Marshal(refusalDoneEvent); err == nil {
-		fmt.Fprintf(w, "data: %s\n\n", eventData)
-		flusher.Flush()
-	}
-
-	// Send response.completed with refusal content type (OpenAI standard)
-	completedEvent := &StreamingEvent{
-		Type:           "response.completed",
-		SequenceNumber: 3,
-		Response: &ResponseData{
-			ID:        responseID,
-			Model:     model,
-			Status:    "completed",
-			CreatedAt: getCurrentTimestamp(),
-			Output: []OutputItem{
-				{
-					ID:     itemID,
-					Type:   "message",
-					Role:   "assistant",
-					Status: "completed",
-					Content: []ContentItem{
-						{
-							Type:    "refusal",
-							Refusal: message,
-						},
-					},
-				},
-			},
-		},
-	}
-	if eventData, err := json.Marshal(completedEvent); err == nil {
-		fmt.Fprintf(w, "data: %s\n\n", eventData)
-		flusher.Flush()
-	}
-}
-
-// getCurrentTimestamp returns the current Unix timestamp as seconds since epoch.
-func getCurrentTimestamp() int64 {
-	return time.Now().Unix()
 }
 
 // hasOutputModeration returns true when the guardrail options include output rails.

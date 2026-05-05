@@ -14,7 +14,12 @@ import {
   ResponseMetrics,
   TokenInfo,
 } from '~/app/types';
-import { ERROR_MESSAGES, initialBotMessage } from '~/app/Chatbot/const';
+import {
+  ERROR_MESSAGES,
+  GUARDRAIL_ERROR_CODES,
+  GUARDRAIL_MESSAGES,
+  initialBotMessage,
+} from '~/app/Chatbot/const';
 import { getSelectedServersForAPI } from '~/app/utilities/mcp';
 import { ServerStatusInfo } from '~/app/hooks/useMCPServerStatuses';
 
@@ -584,10 +589,28 @@ const useChatbotMessages = ({
         return;
       }
 
-      const errorMessage =
+      const rawErrorMessage =
         error instanceof Error
           ? error.message
           : 'Sorry, I encountered an error while processing your request. Please try again.';
+
+      const errorCode =
+        error instanceof Error && 'code' in error && typeof error.code === 'string'
+          ? error.code
+          : undefined;
+      const errorMessage = (() => {
+        if (errorCode === GUARDRAIL_ERROR_CODES.INPUT_VIOLATION) {
+          return GUARDRAIL_MESSAGES.INPUT_VIOLATION;
+        }
+        if (errorCode === GUARDRAIL_ERROR_CODES.OUTPUT_VIOLATION) {
+          return GUARDRAIL_MESSAGES.OUTPUT_VIOLATION;
+        }
+        return rawErrorMessage;
+      })();
+
+      if (errorCode === GUARDRAIL_ERROR_CODES.INPUT_VIOLATION) {
+        fireMiscTrackingEvent('Guardrail Activated', { violationDetected: true });
+      }
 
       // Check if this was a user-initiated stop (stop button, not clear conversation)
       const wasUserStopped =
