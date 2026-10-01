@@ -23,6 +23,9 @@ Central index of key documentation in the ODH Dashboard monorepo.
 | [Module Federation](docs/module-federation.md) | Module Federation implementation |
 | [Extensibility](docs/extensibility.md) | Plugin/extension system |
 | [Quality Gates](docs/modular-architecture-quality-gates.md) | Modular architecture quality standards |
+| [Unified Project Selector Strategy](docs/unified-project-selector-strategy-handbook.md) | UPS roadmap, confirmed contracts, open decisions, and delivery validation checklist |
+| [Unified Project Selector Planning Meeting](docs/unified-project-selector-planning-meeting.md) | Concise architecture and senior-review agenda for choosing the first UPS delivery slice |
+| [Project Selector Complexity Inventory](docs/project-selector-complexity-inventory.md) | Ranked UPS migration candidates and selectors that must remain form-local |
 
 ---
 
